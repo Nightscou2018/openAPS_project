@@ -1,0 +1,40 @@
+from subprocess import call
+import json
+from datetime import datetime,timedelta
+
+
+call(["openaps", "report", "invoke", "enact/suggested.json"])
+
+with open("monitor/glucose.json") as f:
+    data = json.load(f)
+
+
+data_to_prepend = data[0]
+
+current_time = data_to_prepend["display_time"]
+mytime = datetime.strptime(current_time,"%Y-%m-%dT%H:%M:%S-07:00")
+dt = timedelta(minutes = 5)
+mytime += dt
+
+make_time_str = str(mytime).split(' ')
+new_time_str = make_time_str[0]+"T"+make_time_str[1]+"-07:00"
+
+data_to_prepend["display_time"] = new_time_str
+data_to_prepend["dateString"] = new_time_str
+
+current_time = data_to_prepend["system_time"]
+mytime = datetime.strptime(current_time,"%Y-%m-%dT%H:%M:%S-07:00")
+dt = timedelta(minutes = 5)
+mytime += dt
+
+make_time_str = str(mytime).split(' ')
+new_time_str = make_time_str[0]+"T"+make_time_str[1]+"-07:00"
+
+data_to_prepend["system_time"] =  new_time_str
+
+data_to_prepend["glucose"] = int(data_to_prepend["glucose"])+1
+
+data.insert(0, data_to_prepend)
+
+with open('monitor/glucose.json', 'w') as outfile:
+    json.dump(data, outfile)
